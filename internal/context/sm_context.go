@@ -280,8 +280,6 @@ func NewSMContext(id string, pduSessID int32) *SMContext {
 	smContext := new(SMContext)
 	// Create Ref and identifier
 	smContext.Ref = uuid.New().URN()
-	smContextPool.Store(smContext.Ref, smContext)
-	canonicalRef.Store(canonicalName(id, pduSessID), smContext.Ref)
 
 	smContext.Log = logger.PduSessLog.WithFields(logrus.Fields{
 		logger.FieldSupi:         id,
@@ -369,6 +367,9 @@ func NewSMContext(id string, pduSessID int32) *SMContext {
 
 	smContext.NrdcIndicator = false
 
+	storeSMContext(smContext)
+	canonicalRef.Store(canonicalName(id, pduSessID), smContext.Ref)
+
 	return smContext
 }
 
@@ -421,7 +422,7 @@ func RemoveSMContext(ref string) {
 
 	smContext.NrdcIndicator = false
 
-	smContextPool.Delete(ref)
+	deleteSMContext(ref)
 	canonicalRef.Delete(canonicalName(smContext.Supi, smContext.PDUSessionID))
 	smContext.Log.Infof("smContext[%s] is deleted from pool", ref)
 }
